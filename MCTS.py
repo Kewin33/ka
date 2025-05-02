@@ -53,9 +53,9 @@ class MCTSNode:
     def rollout(self):
         """Perform a random simulation from this node's state"""
         current_state = copy.deepcopy(self.state)
-        while current_state[-1] is not None:  # Implement is_terminal for your problem
-            print("Running rollout")
+        while current_state[-1] is None:  # Implement is_terminal for your problem
             action = GameRepresentation.getPossibleMoves(*current_state) #current_state.random_action()  # Implement random action selection
+            print(f"Current end: {current_state[-1]}")
             action = random.choice(action)
             current_state = GameRepresentation.move(*current_state, *action)
         return get_reward(current_state) 
@@ -111,7 +111,6 @@ class MCTS:
     def simulate(self, node):
         """Run a simulation from the given node"""
         if node.is_terminal():
-            print("Terminal state reached")
             return get_reward(node.state)
         return node.rollout()
     
