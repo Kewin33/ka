@@ -55,8 +55,21 @@ class MCTSNode:
         while current_state[-1] is None:  # Implement is_terminal for your problem
             action = GameRepresentation.getPossibleMoves(*current_state) #current_state.random_action()  # Implement random action selection
             action = random.choice(action)
+            #action = sorted(action, key=lambda m: self.move_priority(m))
+            #action = action[0]
             current_state = GameRepresentation.move(*current_state, *action)
-        return get_reward(current_state) 
+        return get_reward(current_state)
+
+    def move_priority(self, move):
+        x, y = move
+        x = x % 3
+        y = y % 3
+        if (x, y) == (1, 1):
+            return 0  # center
+        elif (x, y) in [(0, 0), (0, 2), (2, 0), (2, 2)]:
+            return 1  # corners
+        else:
+            return 2  # edges
     
     def backpropagate(self, reward):
         """Backpropagate the simulation result"""
@@ -134,4 +147,4 @@ class MCTS:
             connector = "└── " if i == len(children) - 1 else "├── "
             print(prefix + connector + str(str(child.value) + "/" + str(child.visits)))
             extension = "    " if i == len(children) - 1 else "│   "
-            self.print_tree(child, prefix + extension)
+            #self.print_tree(child, prefix + extension)
