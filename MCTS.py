@@ -14,14 +14,14 @@ class MCTSNode:
         self.visits = 0            # Number of times node was visited
         self.value = 0            # Accumulated value from simulations
         self.untried_actions = GameRepresentation.getPossibleMoves(*state)  # Actions not yet expanded, move array [(0,1)]
-        self.action = None         # Action that led to this node, idx in prev Node
+        self.action = None         # Action that led to this node
         
     def is_fully_expanded(self):
         return len(self.untried_actions) == 0
     
     def is_terminal(self):
         """Check if the node represents a terminal state"""
-        # This should be implemented based on your specific problem
+        print(self.state[-1] != None)
         return self.state[-1] != None 
         
     def expand(self):
@@ -53,11 +53,12 @@ class MCTSNode:
     def rollout(self):
         """Perform a random simulation from this node's state"""
         current_state = copy.deepcopy(self.state)
-        while current_state[-1] != None:  # Implement is_terminal for your problem
+        while current_state[-1] is not None:  # Implement is_terminal for your problem
+            print("Running rollout")
             action = GameRepresentation.getPossibleMoves(*current_state) #current_state.random_action()  # Implement random action selection
             action = random.choice(action)
             current_state = GameRepresentation.move(*current_state, *action)
-        return get_reward(self.state) #current_state.get_reward()  # Implement reward calculation
+        return get_reward(current_state) 
     
     def backpropagate(self, reward):
         """Backpropagate the simulation result"""
@@ -67,20 +68,23 @@ class MCTSNode:
             self.parent.backpropagate(reward)
 
 def get_reward(state):
-    if state[4]:
-        if state[-1] == "O":
-            return 1
-        elif state[-1] == "D":
-            return 0
-        else:
-            return -1
-    else:
+    print(GameRepresentation.stringRep(*state)) 
+    x_turn = state[4]
+    if x_turn:
         if state[-1] == "X":
-            return 1
-        elif state[-1] == "D":
+            return 3
+        elif state[-1] == "O":
             return 0
         else:
-            return -1
+            return 1
+    else:
+        if state[-1] == "O":
+            return 3
+        elif state[-1] == "X":
+            return 0
+        else:
+            return 1
+        
 
 class MCTS:
     def __init__(self, initial_state, iteration_limit=1000):
@@ -93,8 +97,6 @@ class MCTS:
             node = self.select(self.root)
             reward = self.simulate(node)
             node.backpropagate(reward)
-            print(f"Root visits: {self.root.visits}")
-            print(f"Root value: {self.root.value}")
         return self.get_best_action()
     
     def select(self, node):
@@ -109,6 +111,7 @@ class MCTS:
     def simulate(self, node):
         """Run a simulation from the given node"""
         if node.is_terminal():
+            print("Terminal state reached")
             return get_reward(node.state)
         return node.rollout()
     
@@ -133,7 +136,6 @@ class MCTS:
         children = node.children
         for i, child in enumerate(children):
             connector = "└── " if i == len(children) - 1 else "├── "
-            print(prefix + connector + str(child.value + "/" + child.visits))
+            print(prefix + connector + str(str(child.value) + "/" + str(child.visits)))
             extension = "    " if i == len(children) - 1 else "│   "
             self.print_tree(child, prefix + extension)
-

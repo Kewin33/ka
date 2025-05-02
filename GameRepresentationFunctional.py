@@ -39,13 +39,14 @@ def move(global_state_x, global_state_o, local_state_x, local_state_o, currentPl
             board_name[board] |= (1 << (local_y * 3 + local_x))
 
             if checkWin(board_name[board]):
+                #check global win
                 # if the player is X
                 if currentPlayer:
                     global_state_x |= (1 << board)
                     if (checkWin(global_state_x & ~global_state_o)):
                         winner =  "X"
                         return (
-                            global_state_x, global_state_o, local_state_x, local_state_o, not currentPlayer, currentBoard, winner
+                            global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner
                         )
                 # if the player is O
                 else:
@@ -53,15 +54,16 @@ def move(global_state_x, global_state_o, local_state_x, local_state_o, currentPl
                     if (checkWin(global_state_o & ~global_state_x)):
                         winner = "O"
                         return (
-                            global_state_x, global_state_o, local_state_x, local_state_o, not currentPlayer, currentBoard, winner
+                            global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner
                         )
-                    
+                #check global draw    
                 if checkDraw(global_state_x, global_state_o):
                     winner = "D"
                     return (
-                        global_state_x, global_state_o, local_state_x, local_state_o, not currentPlayer, currentBoard, winner
+                        global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner
                     )   
-                
+
+            # check if the board is full
             elif checkDraw(local_state_x[board], local_state_o[board]):
                 global_state_x |= (1 << board)
                 global_state_o |= (1 << board)
@@ -69,7 +71,7 @@ def move(global_state_x, global_state_o, local_state_x, local_state_o, currentPl
                 if checkDraw(global_state_x, global_state_o):
                     winner = "D"
                     return (
-                        global_state_x, global_state_o, local_state_x, local_state_o, not currentPlayer, currentBoard, "D"
+                        global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, "D"
                     )
                     
 
@@ -110,8 +112,7 @@ def isNotPlayableBoard(global_state_x, global_state_o, board):
     if global_state_x & (1 << board) or global_state_o & (1 << board):
         return True
     return False
-        
-        
+             
 ### general functions
 def checkValidMove(global_state_x, global_state_o, local_state_x, local_state_o, current_board, board, local_x, local_y):
     # check taht the board is valid 
