@@ -21,7 +21,6 @@ class MCTSNode:
     
     def is_terminal(self):
         """Check if the node represents a terminal state"""
-        print(self.state[-1] != None)
         return self.state[-1] != None 
         
     def expand(self):
@@ -55,7 +54,6 @@ class MCTSNode:
         current_state = copy.deepcopy(self.state)
         while current_state[-1] is None:  # Implement is_terminal for your problem
             action = GameRepresentation.getPossibleMoves(*current_state) #current_state.random_action()  # Implement random action selection
-            print(f"Current end: {current_state[-1]}")
             action = random.choice(action)
             current_state = GameRepresentation.move(*current_state, *action)
         return get_reward(current_state) 
@@ -68,7 +66,6 @@ class MCTSNode:
             self.parent.backpropagate(reward)
 
 def get_reward(state):
-    print(GameRepresentation.stringRep(*state)) 
     x_turn = state[4]
     if x_turn:
         if state[-1] == "X":
