@@ -410,20 +410,24 @@ def flip_arr(arr):
     internal_flipped = []
     for perm in range(len(SYMMETRY_INDICES)):
         internal_rows = []
-        for row in arr:
+        for row in range(len(arr)//9):
             new_row = [0] * 9
             for i in range(9):
-                new_row[SYMMETRY_INDICES[perm][i]] = row[i]
+                new_row[SYMMETRY_INDICES[perm][i]] = arr[9*row + i]
             internal_rows.append(new_row)
         internal_flipped.append(internal_rows)
     # outer flipping
+    res = []
     new_arr = [[0] * 9 for _ in range(8)]
     for perm in range(len(SYMMETRY_INDICES)):
         for i in range(9):
             print(f"sym no.: {perm}, small square: {i}, mapping to: {SYMMETRY_INDICES[perm][i]}")
             new_arr[perm][SYMMETRY_INDICES[perm][i]] = internal_flipped[perm][i]
-
-    return new_arr
+        res.append(sum(new_arr[perm],[]))
+        print(new_arr[perm])
+        print(res[perm])
+        print()
+    return res
         
 
         
@@ -477,21 +481,20 @@ def stringRep(global_state_x, global_state_o, local_state_x, local_state_o, curr
 
 if __name__ == "__main__":
     arr = [
-        [1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
     ]
     symmetries_result = flip_arr(arr)
     for perm in range(8):
-        for j in range(9):
-            print(symmetries_result[perm][j])
-        print()
+            print(symmetries_result[perm])
+            print()
 
     '''
     # set start time 
