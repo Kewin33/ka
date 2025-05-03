@@ -1,6 +1,29 @@
 import copy
 import random
 import time
+import numpy as np
+
+SYMMETRY_INDICES = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8], #identity
+    [6, 3, 0, 7, 4, 1, 8, 5, 2], # rotate 90
+    [8, 7, 6, 5, 4, 3, 2, 1, 0], # rotate 180
+    [2, 5, 8, 1, 4, 7, 0, 3, 6], # rotate 270
+    [2, 1, 0, 5, 4, 3, 8, 7, 6], #flip vertical
+    [6, 7, 8, 3, 4, 5, 0, 1, 2], # flip horizontal
+    [0, 3, 6, 1, 4, 7, 2, 5, 8], # flip main diagonal
+    [8, 5, 2, 7, 4, 1, 6, 3, 0], # flip anti diagonal
+]
+
+LOCAL_SYMMETRY_INDICES = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8], #identity
+    [2, 5, 8, 1, 4, 7, 0, 3, 6], # rotate 270 
+    [8, 7, 6, 5, 4, 3, 2, 1, 0], # rotate 180
+    [6, 3, 0, 7, 4, 1, 8, 5, 2], # rotate 90
+    [2, 1, 0, 5, 4, 3, 8, 7, 6], #flip vertical
+    [6, 7, 8, 3, 4, 5, 0, 1, 2], # flip horizontal
+    [0, 3, 6, 1, 4, 7, 2, 5, 8], # flip main diagonal
+    [8, 5, 2, 7, 4, 1, 6, 3, 0], # flip anti diagonal
+]
 
 
 WIN_MASKS = [
@@ -29,61 +52,65 @@ INITIAL_STATE = (
 )
 
 def move(global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner,  global_x, global_y):
-        board = (global_y // 3) * 3 + (global_x // 3 )
+        board = (global_y // 3) *3+ (global_x // 3 )
         local_x = global_x % 3
         local_y = global_y % 3
-        board_name = local_state_x if currentPlayer else local_state_o
+        board_name =  local_state_x if currentPlayer else local_state_o
         
  
-        #if (checkValidMove(global_state_x, global_state_o, local_state_x, local_state_o, currentBoard, board, local_x, local_y)):
-        board_name[board] |= (1 << (local_y * 3 + local_x))
+        if (checkValidMove(global_state_x, global_state_o, local_state_x, local_state_o, currentBoard, board, local_x, local_y)):
+            board_name[board] |= (1 << (local_y * 3 + local_x))
 
-        if checkWin(board_name[board]):
-            #check global win
-            # if the player is X
-            if currentPlayer:
+            if checkWin(board_name[board]):
+                #check global win
+                # if the player is X
+                if currentPlayer:
+                    global_state_x |= (1 << board)
+                    if (checkWin(global_state_x & ~global_state_o)):
+                        winner =  "X"
+                        return (
+                            global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner
+                        )
+                # if the player is O
+                else:
+                    global_state_o |= (1 << board)
+                    if (checkWin(global_state_o & ~global_state_x)):
+                        winner = "O"
+                        return (
+                            global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner
+                        )
+                #check global draw    
+                if checkDraw(global_state_x, global_state_o):
+                    winner = "D"
+                    return (
+                        global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner
+                    )   
+
+            # check if the board is full
+            elif checkDraw(local_state_x[board], local_state_o[board]):
                 global_state_x |= (1 << board)
-                if (checkWin(global_state_x & ~global_state_o)):
-                    return (
-                        global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, "X"
-                    )
-            # if the player is O
-            else:
                 global_state_o |= (1 << board)
-                if (checkWin(global_state_o & ~global_state_x)):
+
+                if checkDraw(global_state_x, global_state_o):
+                    winner = "D"
                     return (
-                        global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, "O"
+                        global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, "D"
                     )
-            #check global draw
-            if checkDraw(global_state_x, global_state_o):
-                return (
-                    global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, "D"
-                )
+                    
 
-        # check if the board is full
-        elif checkDraw(local_state_x[board], local_state_o[board]):
-            global_state_x |= (1 << board)
-            global_state_o |= (1 << board)
-
-            if checkDraw(global_state_x, global_state_o):
-                return (
-                    global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, "D"
-                )
+            # check next board
+            currentBoard = local_x + local_y * 3
+            if isNotPlayableBoard(global_state_x, global_state_o, currentBoard):
+                # if the next board is not playable, set it to 9
+                currentBoard = 9
 
 
-        # check next board
-        currentBoard = local_x + local_y * 3
-        if isNotPlayableBoard(global_state_x, global_state_o, currentBoard):
-            # if the next board is not playable, set it to 9
-            currentBoard = 9
+            # change player
+            #currentPlayer = not currentPlayer
+            return (global_state_x, global_state_o, local_state_x, local_state_o, not currentPlayer, currentBoard, winner)
 
-
-        # change player
-        #currentPlayer = not currentPlayer
-        return (global_state_x, global_state_o, local_state_x, local_state_o, not currentPlayer, currentBoard, winner)
-
-        #else:
-            #return None
+        else:
+            return None
         
 ### local functions:
 def checkWin(board):
@@ -112,7 +139,7 @@ def isNotPlayableBoard(global_state_x, global_state_o, board):
 ### general functions
 def checkValidMove(global_state_x, global_state_o, local_state_x, local_state_o, current_board, board, local_x, local_y):
     # check taht the board is valid 
-    if not ((0 <= board <= 9) and (current_board == 9 or board == current_board)):
+    if not ((0 <= board <=9) and (current_board == 9 or board == current_board)):
         return False
     # check that global board is not set
     if isNotPlayableBoard(global_state_x, global_state_o, board):
@@ -152,6 +179,49 @@ def getPossibleMoves(global_state_x, global_state_o, local_state_x, local_state_
                     if not isSetOnBoard(local_state_x, local_state_o, currentBoard, local_x, local_y):
                         possible_moves.append((local_x + currentBoard % 3 * 3, local_y + currentBoard // 3 * 3))
     return possible_moves
+
+
+def apply_symmetry(bits: int, perm: list[int]) -> int:
+    result = 0
+    for i, j in enumerate(perm):
+        if (bits >> j) & 1:
+            result |= (1 << i)
+    return result
+
+def generate_all_symmetries(bits: int, map) -> dict[str, int]:
+    return [apply_symmetry(bits, perm) for perm in map]
+
+def get_symmetries(global_state_x, global_state_o, local_state_x, local_state_o, currentPlayer, currentBoard, winner):
+    symmetries = []
+    
+
+    global_symmetries_x = generate_all_symmetries(global_state_x, SYMMETRY_INDICES) #len = 8
+    global_symmetries_o = generate_all_symmetries(global_state_o, SYMMETRY_INDICES)
+
+    local_symmetries_x = [generate_all_symmetries(board, LOCAL_SYMMETRY_INDICES) for board in local_state_x]
+    local_symmetries_o = [generate_all_symmetries(board, LOCAL_SYMMETRY_INDICES) for board in local_state_o]
+
+    print(local_symmetries_x)
+
+    #for each symmetry
+    for i in range(8):
+        new_global_state_x = global_symmetries_x[i]
+        new_global_state_o = global_symmetries_o[i]
+        new_local_state_x = [0] * 9
+        new_local_state_o = [0] * 9
+
+        #for each local board
+        for j in range(9):
+            print(f"sym no.: {i}, small square: {j}, mapping to: {SYMMETRY_INDICES[i][j]}")
+            new_local_state_x[SYMMETRY_INDICES[i][j]] = local_symmetries_x[j][i]
+            new_local_state_o[SYMMETRY_INDICES[i][j]] = local_symmetries_o[j][i]
+            # new_local_state_o[j] = local_symmetries_o[i][SYMMETRY_INDICES[i][j]]
+
+        new_currentBoard = 9 if 9 == currentBoard else SYMMETRY_INDICES[i][currentBoard]
+        symmetries.append((new_global_state_x, new_global_state_o, new_local_state_x, new_local_state_o, currentPlayer, new_currentBoard, winner))
+
+    return symmetries
+
 
 
 
@@ -199,12 +269,6 @@ def stringRep(global_state_x, global_state_o, local_state_x, local_state_o, curr
     board += "\n"
     return board
         
-
-
-
-
-
-
 
 if __name__ == "__main__":
     # set start time 
