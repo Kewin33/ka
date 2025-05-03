@@ -421,12 +421,8 @@ def flip_arr(arr):
     new_arr = [[0] * 9 for _ in range(8)]
     for perm in range(len(SYMMETRY_INDICES)):
         for i in range(9):
-            print(f"sym no.: {perm}, small square: {i}, mapping to: {SYMMETRY_INDICES[perm][i]}")
             new_arr[perm][SYMMETRY_INDICES[perm][i]] = internal_flipped[perm][i]
         res.append(sum(new_arr[perm],[]))
-        print(new_arr[perm])
-        print(res[perm])
-        print()
     return res
         
 
