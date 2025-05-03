@@ -56,26 +56,31 @@ class MCTSNode:
         while current_state[-1] is None:  # Implement is_terminal for your problem
             valid_moves = GameRepresentation.getPossibleMoves(*current_state)
            # Get policy probabilities ONLY for valid moves
-            policy_probs, _ = self.nnet.predict(current_state, valid_moves)
+            chosen_move = None
+            if self.nnet != None:
+                policy_probs, _ = self.nnet.predict(current_state, valid_moves)
 
-            # Filter probabilities for only valid moves
-            valid_probs = []
-            valid_indices = []
-            for x, y in valid_moves:
-                index = y * 9 + x  # Convert (x,y) to flat index
-                valid_probs.append(policy_probs[index])
-                valid_indices.append(index)
-        
-            # Normalize the probabilities (sum to 1)
-            prob_sum = sum(valid_probs)
-            if prob_sum <= 0:  # Handle edge case
-                valid_probs = [1/len(valid_moves)] * len(valid_moves)
-            else:
-                valid_probs = [p/prob_sum for p in valid_probs]
+                # Filter probabilities for only valid moves
+                valid_probs = []
+                valid_indices = []
+                for x, y in valid_moves:
+                    index = y * 9 + x  # Convert (x,y) to flat index
+                    valid_probs.append(policy_probs[index])
+                    valid_indices.append(index)
             
-            # Choose action by weighted random selection
-            chosen_idx = random.choices(range(len(valid_moves)), weights=valid_probs, k=1)[0]
-            chosen_move = valid_moves[chosen_idx]
+                # Normalize the probabilities (sum to 1)
+                prob_sum = sum(valid_probs)
+                if prob_sum <= 0:  # Handle edge case
+                    valid_probs = [1/len(valid_moves)] * len(valid_moves)
+                else:
+                    valid_probs = [p/prob_sum for p in valid_probs]
+                
+                # Choose action by weighted random selection
+                chosen_idx = random.choices(range(len(valid_moves)), weights=valid_probs, k=1)[0]
+                chosen_move = valid_moves[chosen_idx]
+            else: 
+                chosen_move = random.choice(valid_moves)
+
             current_state = GameRepresentation.move(*current_state, *chosen_move)
         return get_reward(current_state) 
     
