@@ -64,7 +64,12 @@ class Coach():
 
             pi = self.mcts.getActionProb(copy.deepcopy(board), temp=temp)
             trainExamples.append([state_to_tensor(board), self.curPlayer, pi, None])
-            # sym = GameRepresentationFunctional.get_symmetries(*board) TODO: get symmetries for pi 
+            sym = GameRepresentationFunctional.get_symmetries(*board) #TODO: get symmetries for pi 
+            # tensor to numpy
+            pi = np.array(pi).tolist()
+            print(f"pi = {pi}")
+            pi_sym = GameRepresentationFunctional.flip_arr(pi)
+            print(f"pi_sym = {pi_sym}")
             # for b, p in sym:
             #     trainExamples.append([b, self.curPlayer, p, None])
 
@@ -215,8 +220,8 @@ class Coach():
 
 if __name__ == "__main__":
     args = {
-        'numIters': 1,
-        'numEps': 1,              # Number of complete self-play games to simulate during a new iteration.
+        'numIters': 10,
+        'numEps': 100,              # Number of complete self-play games to simulate during a new iteration.
         'tempThreshold': 15,        #
         'updateThreshold': 0.6,     # During arena playoff, new neural net will be accepted if threshold or more of games are won.
         'maxlenOfQueue': 200000,    # Number of game examples to train the neural networks.
@@ -225,12 +230,13 @@ if __name__ == "__main__":
         'cpuct': 1,             # Upper confidence bound for MCTS exploration.
         'checkpoint': './temp/',
         'load_model': False,
-        "epochs": 100,  
+        "epochs": 10,  
         'batch_size': 32,
         'numItersForTrainExamplesHistory': 20,
     }
     nnet = UltimateTTTNet()
     coach = Coach(nnet, args, )
+    nnet.load_checkpoint(folder=args["checkpoint"], filename='checkpoint_2.pth.tar')
     start = time.time()
 
     coach.learn()
